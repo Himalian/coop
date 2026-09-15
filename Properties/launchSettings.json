@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "DebugWithArgs": {
-      "commandName": "Project",
-      "commandLineArgs": "list c"
-    }
-  }
-}
