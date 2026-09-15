@@ -3,24 +3,52 @@ namespace Coop.Commands;
 
 public static class ListCommand
 {
+    private static string GetScoopPath()
+    {
+        string? path = Environment.GetEnvironmentVariable("SCOOP");
+        if (path == null)
+        {
+            Console.WriteLine("Warning: environment variable 'SCOOP' not found, fallback to default path");
+            path = Path.Join(Environment.GetEnvironmentVariable("HOMEPATH"), "scoop");
+        }
+        return path;
+    }
+
+    private static string[] GetApps()
+    {
+        throw new NotImplementedException();
+    }
     public static Command GetCommand()
     {
-        var command = new Command("list", "list installed apps");
+		Argument<string?> queryArgument = new("query"){
+			Arity = ArgumentArity.ZeroOrOne
+		};
+        var command = new Command("list", "list installed apps")
+		{
+			queryArgument
+		};
         command.SetAction(parseResult =>
         {
-            string scoopPath = Environment.GetEnvironmentVariable("SCOOP")!;
+			string? query = parseResult.GetValue(queryArgument);
+            string scoopPath = GetScoopPath();
 
-            if (scoopPath == null)
-            {
-                Console.WriteLine("Warning: environment variable 'SCOOP' not found, fallback to default path");
-                scoopPath = Path.Join(Environment.GetEnvironmentVariable("HOMEPATH"), "scoop");
-            }
 
             string[] apps = Directory.GetDirectories(Path.Join(scoopPath, "apps"));
-            Console.WriteLine("Installed apps:");
-            foreach (var app in apps)
+            if (!string.IsNullOrEmpty(query))
             {
-                Console.WriteLine(app.TrimStart(Path.Join(scoopPath, "apps")));
+                Console.WriteLine($"Installed apps matching '{query}':");
+                var filteredApps = apps.Select(Path.GetFileName).Where(x => x != null && x.Contains(query,StringComparison.OrdinalIgnoreCase));
+				foreach (var app in filteredApps){
+					Console.WriteLine(Path.GetFileName(app));
+				}
+            }
+            else
+            {
+                Console.WriteLine("Installed apps:");
+                foreach (var app in apps)
+                {
+                    Console.WriteLine(app.TrimStart(Path.Join(scoopPath, "apps")));
+                }
             }
         });
 
