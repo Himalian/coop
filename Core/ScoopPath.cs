@@ -3,31 +3,28 @@ namespace Coop.Core;
 
 public class ScoopPath
 {
-	private readonly string ScoopRootPath;
-	ScoopPath(string? pathFromArg)
+	readonly string RootPath;
+	// /scoop/buckets
+	public string BucketsPath => Path.Combine(RootPath, "buckets");
+	// /scoop/apps
+	public string AppsPath => Path.Combine(RootPath, "apps");
+	public ScoopPath()
 	{
-		if (!string.IsNullOrEmpty(pathFromArg)) { ScoopRootPath = pathFromArg; return; }
 		var pathFromEnv = Environment.GetEnvironmentVariable("SCOOP");
-		if (!string.IsNullOrEmpty(pathFromEnv)) { ScoopRootPath = pathFromEnv; return; }
+		if (!string.IsNullOrEmpty(pathFromEnv)) { RootPath = pathFromEnv; return; }
 
 		var defaultScoopPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 		Console.WriteLine($"Warning: Scoop Path not found, fallback to {defaultScoopPath}");
-		ScoopRootPath = defaultScoopPath;
+		RootPath = defaultScoopPath;
 		return;
 	}
 
-	public string GetAppsPath()
+	public string GetBucketPath(string bucket)
 	{
-		return Path.Join(ScoopRootPath, "apps");
-	}
-	public string GetBucketsRootPath()
-	{
-		return Path.Join(ScoopRootPath, "buckets");
-	}
-	public string GetBucketPath(string bucket){
-		var bucketPath = Path.Join(GetBucketsRootPath(),bucket);
-		if(Path.Exists(bucketPath)){return bucketPath;}
-		else{
+		var bucketPath = Path.Join(BucketsPath, bucket);
+		if (Path.Exists(bucketPath)) { return bucketPath; }
+		else
+		{
 			throw new DirectoryNotFoundException();
 		}
 
