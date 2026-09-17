@@ -8,9 +8,9 @@ public static class SearchCommand
 	/// Get all apps in given bucket
 	/// </summary>
 	/// <param name="bucketRootPath" bucket name </param>
-	static string[] GetAppsFromBucket(string bucketRootPath,string bucketName)
+	static string[] GetAppsFromBucket(string bucketRootPath, string bucketName)
 	{
-		string[] apps = [.. Directory.GetFiles(Path.Join(bucketRootPath,bucketName,"bucket")).Select(p => Path.GetFileNameWithoutExtension(p))];
+		string[] apps = [.. Directory.GetFiles(Path.Join(bucketRootPath, bucketName, "bucket")).Select(p => Path.GetFileNameWithoutExtension(p))];
 		return apps;
 	}
 	public static Command GetCommand(ScoopPath path)
@@ -24,10 +24,24 @@ public static class SearchCommand
 
 		command.SetAction(parseResult =>
 		{
-			var query = parseResult.GetValue(argument)!;
-			var bucketName = parseResult.GetValue(bucket)!;
-			var apps = GetAppsFromBucket(path.BucketsPath,bucketName);
-			apps = [.. apps.Where(app => app.Contains(query,StringComparison.OrdinalIgnoreCase))];
+			var query = parseResult.GetValue(argument);
+			var bucketName = parseResult.GetValue(bucket);
+			if (string.IsNullOrEmpty(query)) { throw new ArgumentNullException("<query> not provided"); }
+			;
+			var apps = new List<string>();
+			if (string.IsNullOrEmpty(bucketName))
+			{
+				string[] buckets = path.ListBucketName();
+				foreach (var bucket in buckets)
+				{ apps.AddRange<string>(GetAppsFromBucket(path.BucketsPath, bucket)); }
+				;
+			}
+			else
+			{
+
+				apps.AddRange<string>(GetAppsFromBucket(path.BucketsPath, bucketName));
+			}
+			apps = [.. apps.Where(app => app.Contains(query, StringComparison.OrdinalIgnoreCase))];
 			foreach (var app in apps)
 			{
 				Console.WriteLine(app);
